@@ -72,29 +72,6 @@ export default function ZoneDetailPage() {
         { label: 'Exp Rate', value: z.zone_exp_multiplier ? `${z.zone_exp_multiplier}x` : '1x' },
       ]} />
 
-      <RelatedList<NpcSummary>
-        title="NPCs"
-        items={Array.from(new Map(data.npcs.map(n => [n.id, n])).values())}
-        renderItem={(npc) => (
-          <li key={npc.id} className="text-sm flex gap-3">
-            <EntityLink type="npc" id={npc.id} name={formatNpcName(npc.name)} />
-            <span className="text-eq-muted">
-              L{npc.level} {CLASS_NAMES[npc.class] ?? `Class ${npc.class}`}
-            </span>
-          </li>
-        )}
-      />
-
-      <RelatedList
-        title="Zone Connections"
-        items={data.zone_points}
-        renderItem={(zp) => (
-          <li key={zp.id} className="text-sm">
-            <EntityLink type="zone" id={zp.target_zone_id} name={zp.dest_long || zp.dest_short || String(zp.target_zone_id)} />
-          </li>
-        )}
-      />
-
       <RelatedList<QuestData>
         title="Quests"
         items={data.quests}
@@ -122,6 +99,29 @@ export default function ZoneDetailPage() {
             </li>
           );
         }}
+      />
+
+      <RelatedList<NpcSummary>
+        title="NPCs"
+        items={Array.from(new Map(data.npcs.map(n => [n.id, n])).values())}
+        renderItem={(npc) => (
+          <li key={npc.id} className="text-sm flex gap-3">
+            <EntityLink type="npc" id={npc.id} name={formatNpcName(npc.name)} />
+            <span className="text-eq-muted">
+              L{npc.level} {CLASS_NAMES[npc.class] ?? `Class ${npc.class}`}
+            </span>
+          </li>
+        )}
+      />
+
+      <RelatedList
+        title="Zone Connections"
+        items={data.zone_points}
+        renderItem={(zp) => (
+          <li key={zp.id} className="text-sm">
+            <EntityLink type="zone" id={zp.target_zone_id} name={zp.dest_long || zp.dest_short || String(zp.target_zone_id)} />
+          </li>
+        )}
       />
     </div>
   );
