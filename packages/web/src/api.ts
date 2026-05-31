@@ -1,5 +1,16 @@
 const BASE = '/api';
 
+/**
+ * Format a raw NPC name from the database for display.
+ * EQEmu stores NPC names with underscores in place of spaces (e.g. "a_lesser_spirit").
+ * The game client replaces underscores with spaces and capitalises the first letter.
+ */
+export function formatNpcName(raw: string | null | undefined): string {
+  if (!raw) return '';
+  const spaced = raw.replace(/_/g, ' ');
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+}
+
 async function get<T>(path: string, params?: Record<string, string>): Promise<T> {
   const url = new URL(BASE + path, window.location.origin);
   if (params) {

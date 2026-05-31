@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '../api.js';
+import { api, formatNpcName } from '../api.js';
 import { StatBlock } from '../components/StatBlock.js';
 import { RelatedList } from '../components/RelatedList.js';
 import { EntityLink } from '../components/EntityLink.js';
@@ -50,7 +50,7 @@ export default function ZoneDetailPage() {
         items={data.npcs}
         renderItem={(npc) => (
           <li key={npc.id} className="text-sm flex gap-3">
-            <EntityLink type="npc" id={npc.id} name={npc.name} />
+            <EntityLink type="npc" id={npc.id} name={formatNpcName(npc.name)} />
             <span className="text-eq-muted">
               L{npc.level} {CLASS_NAMES[npc.class] ?? `Class ${npc.class}`}
             </span>
@@ -76,7 +76,7 @@ export default function ZoneDetailPage() {
             <EntityLink
               type="quest"
               id={q.file_path}
-              name={q.npc_name.replace(/_/g, ' ')}
+              name={formatNpcName(q.npc_name)}
               questPath={`${q.zone}/${q.npc_name}`}
             />
             {q.keywords.length > 0 && (

@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '../api.js';
+import { api, formatNpcName } from '../api.js';
 import { StatBlock } from '../components/StatBlock.js';
 import { RelatedList } from '../components/RelatedList.js';
 import { EntityLink } from '../components/EntityLink.js';
@@ -112,7 +112,7 @@ export default function ItemDetailPage() {
         items={data.merchants}
         renderItem={(m) => (
           <li key={m.npc_id} className="text-sm flex gap-3">
-            <EntityLink type="npc" id={m.npc_id} name={m.npc_name} />
+            <EntityLink type="npc" id={m.npc_id} name={formatNpcName(m.npc_name)} />
             {m.faction_required > 0 && <span className="text-eq-muted text-xs">faction {m.faction_required}</span>}
           </li>
         )}
@@ -145,7 +145,7 @@ export default function ItemDetailPage() {
         items={data.loot_sources}
         renderItem={(src) => (
           <li key={src.npc_id} className="text-sm flex gap-3">
-            <EntityLink type="npc" id={src.npc_id} name={src.npc_name} />
+            <EntityLink type="npc" id={src.npc_id} name={formatNpcName(src.npc_name)} />
             <span className="text-eq-muted text-xs">{src.final_pct}%</span>
           </li>
         )}
@@ -159,7 +159,7 @@ export default function ItemDetailPage() {
             <EntityLink
               type="quest"
               id={q.file_path}
-              name={`${q.npc_name.replace(/_/g, ' ')} (${q.zone})`}
+              name={`${formatNpcName(q.npc_name)} (${q.zone})`}
               questPath={`${q.zone}/${q.npc_name}`}
             />
             <span className="text-eq-muted text-xs">

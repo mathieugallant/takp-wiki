@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '../api.js';
+import { api, formatNpcName } from '../api.js';
 import { StatBlock } from '../components/StatBlock.js';
 import { RelatedList } from '../components/RelatedList.js';
 import { EntityLink } from '../components/EntityLink.js';
@@ -87,7 +87,7 @@ export default function SpellDetailPage() {
         items={data.npc_casters}
         renderItem={(npc) => (
           <li key={npc.id} className="text-sm flex gap-3">
-            <EntityLink type="npc" id={npc.id} name={npc.name} />
+            <EntityLink type="npc" id={npc.id} name={formatNpcName(npc.name)} />
             <span className="text-eq-muted text-xs">L{npc.level}</span>
           </li>
         )}

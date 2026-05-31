@@ -1,6 +1,6 @@
 import { useSearchParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '../api.js';
+import { api, formatNpcName } from '../api.js';
 import { SearchBar } from '../components/SearchBar.js';
 import { LoadingSpinner, ErrorMessage } from '../components/Feedback.js';
 
@@ -73,7 +73,7 @@ export default function SearchPage() {
                         to={`${basePath}/${r.id}`}
                         className="block px-4 py-2 hover:bg-eq-panel/60 text-sm no-underline"
                       >
-                        <span className="text-eq-text">{r.name}</span>
+                        <span className="text-eq-text">{r._type === 'npc' ? formatNpcName(r.name) : r.name}</span>
                         {r.short_name != null ? (
                           <span className="ml-2 text-eq-muted text-xs">({String(r.short_name)})</span>
                         ) : null}

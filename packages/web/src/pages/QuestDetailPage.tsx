@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '../api.js';
+import { api, formatNpcName } from '../api.js';
 import type { Interaction, FactionChange, QuestReward, TriggerItem } from '../api.js';
 import { EntityLink } from '../components/EntityLink.js';
 import { ResolvedEntityLink } from '../components/ResolvedEntityLink.js';
@@ -189,7 +189,7 @@ export default function QuestDetailPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-eq-gold">
-          {data.npc_name.replace(/_/g, ' ')}
+          {formatNpcName(data.npc_name)}
         </h1>
         <p className="text-eq-muted text-sm">
           Zone: <EntityLink type="zone" id={data.zone} name={data.zone} />

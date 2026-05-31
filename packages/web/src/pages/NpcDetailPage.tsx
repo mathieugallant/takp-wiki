@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '../api.js';
+import { api, formatNpcName } from '../api.js';
 import { StatBlock } from '../components/StatBlock.js';
 import { RelatedList } from '../components/RelatedList.js';
 import { EntityLink } from '../components/EntityLink.js';
@@ -34,7 +34,7 @@ export default function NpcDetailPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-eq-gold">{nStr('name')}</h1>
+        <h1 className="text-2xl font-bold text-eq-gold">{formatNpcName(nStr('name'))}</h1>
         {nStr('lastname') && <p className="text-eq-muted text-sm">{nStr('lastname')}</p>}
         <p className="text-eq-muted text-sm">
           {CLASS_NAMES[nNum('class')] ?? `Class ${n.class}`}
@@ -136,9 +136,10 @@ export default function NpcDetailPage() {
             <EntityLink
               type="quest"
               id={q.file_path}
-              name={q.npc_name.replace(/_/g, ' ')}
+              name={formatNpcName(q.npc_name)}
               questPath={`${q.zone}/${q.npc_name}`}
             />
+            <span className="text-eq-muted text-xs">{`${q.zone}`}</span>
           </li>
         )}
       />
