@@ -1,0 +1,23 @@
+{
+  "name": "takp-wiki",
+  "private": true,
+  "workspaces": [
+    "packages/api",
+    "packages/web"
+  ],
+  "scripts": {
+    "test": "npm run test --workspace=packages/api",
+    "dev:api": "npm run dev --workspace=packages/api",
+    "dev:web": "npm run dev --workspace=packages/web",
+    "build": "npm run build --workspace=packages/api && npm run build --workspace=packages/web",
+    "lint": "eslint packages/*/src --ext .ts,.tsx"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.3.0",
+    "typescript": "^5.4.0"
+  }
+}

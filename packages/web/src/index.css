@@ -1,0 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-eq-dark text-eq-text;
+  min-height: 100vh;
+}
+
+a {
+  @apply text-eq-accent hover:underline;
+}

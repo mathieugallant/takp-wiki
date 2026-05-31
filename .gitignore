@@ -1,0 +1,5 @@
+node_modules/
+dist/
+data/quests/**/*.json
+*.env
+.env
