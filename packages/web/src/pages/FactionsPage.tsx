@@ -1,18 +1,10 @@
-import { useQuery } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { api } from '../api.js';
 import { LoadingSpinner, ErrorMessage } from '../components/Feedback.js';
 import { SortHeader } from '../components/SortHeader.js';
 
-const EXPANSION_NAMES: Record<number, string> = {
-  0: 'Classic',
-  1: 'Kunark',
-  2: 'Velious',
-  3: 'Luclin',
-  4: "Planes of Power",
-};
-
-export default function ZonesPage() {
+export default function FactionsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const q = searchParams.get('q') ?? '';
   const sortCol = searchParams.get('sort') ?? 'name';
@@ -32,13 +24,18 @@ export default function ZonesPage() {
   }
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['zones', q, sortCol, sortDir],
-    queryFn: () => api.zones({ search: q, sort: sortCol, dir: sortDir }),
+    queryKey: ['factions', q, sortCol, sortDir],
+    queryFn: () => api.factions({ search: q, sort: sortCol, dir: sortDir }),
+    enabled: q.length >= 2,
   });
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold text-eq-gold">Zones</h1>
+      <h1 className="text-2xl font-bold text-eq-gold">Factions</h1>
+
+      {q.length < 2 && (
+        <p className="text-eq-muted text-sm">Use the search bar above to filter factions.</p>
+      )}
 
       {isLoading && <LoadingSpinner />}
       {error && <ErrorMessage message={(error as Error).message} />}
@@ -50,30 +47,28 @@ export default function ZonesPage() {
               <tr className="border-b border-eq-border text-eq-muted text-left">
                 <SortHeader col="id" label="ID" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
                 <SortHeader col="name" label="Name" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
-                <SortHeader col="short_name" label="Short Name" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
-                <SortHeader col="expansion" label="Expansion" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
-                <SortHeader col="min_level" label="Min Level" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
+                <SortHeader col="base" label="Base" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
+                <SortHeader col="min_cap" label="Min Cap" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
+                <SortHeader col="max_cap" label="Max Cap" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
               </tr>
             </thead>
             <tbody className="divide-y divide-eq-border/50">
-              {data.map((z) => (
-                <tr key={z.id} className="hover:bg-eq-panel/40">
-                  <td className="py-1.5 pr-4 text-eq-muted">{z.id}</td>
+              {data.map((f) => (
+                <tr key={f.id} className="hover:bg-eq-panel/40">
+                  <td className="py-1.5 pr-4 text-eq-muted">{f.id}</td>
                   <td className="py-1.5 pr-4">
-                    <Link to={`/zones/${z.id}`}>{z.long_name}</Link>
-                    {z.hotzone ? (
-                      <span className="ml-2 text-xs bg-eq-gold/20 text-eq-gold px-1 rounded">HOT</span>
-                    ) : null}
+                    <Link to={`/factions/${f.id}`}>{f.name}</Link>
                   </td>
-                  <td className="py-1.5 pr-4 text-eq-muted">{z.short_name}</td>
-                  <td className="py-1.5 pr-4 text-eq-muted">
-                    {EXPANSION_NAMES[z.expansion] ?? `Exp ${z.expansion}`}
-                  </td>
-                  <td className="py-1.5 pr-4 text-eq-muted">{z.min_level || '—'}</td>
+                  <td className="py-1.5 pr-4 text-eq-muted">{f.base}</td>
+                  <td className="py-1.5 pr-4 text-eq-muted">{f.min_cap}</td>
+                  <td className="py-1.5 pr-4 text-eq-muted">{f.max_cap}</td>
                 </tr>
               ))}
             </tbody>
           </table>
+          {data.length === 0 && (
+            <p className="text-eq-muted text-sm mt-4">No factions found.</p>
+          )}
         </div>
       )}
     </div>

@@ -42,12 +42,21 @@ function InteractionCard({ ia }: { ia: Interaction }) {
 
         {ia.trigger_items.map((t: TriggerItem) => (
           <span key={t.item_id} className="inline-flex items-center gap-1">
-            <ResolvedEntityLink type="item" id={t.item_id} className="text-xs border border-eq-border text-eq-text px-2 py-0.5 rounded" />
+            <ResolvedEntityLink type="item" id={t.item_id} className="text-xs border border-eq-gold/50 text-eq-gold px-2 py-0.5 rounded" />
             {t.count > 1 && (
               <span className="text-xs text-eq-muted">&times;{t.count}</span>
             )}
           </span>
         ))}
+
+        {ia.items_required_gate.length > 0 && (
+          <span className="inline-flex items-center gap-1 ml-1">
+            <span className="text-xs text-eq-muted">requires</span>
+            {ia.items_required_gate.map((id) => (
+              <ResolvedEntityLink key={id} type="item" id={id} className="text-xs border border-eq-gold/50 text-eq-gold px-2 py-0.5 rounded" />
+            ))}
+          </span>
+        )}
 
         {ia.faction_required !== null && (
           <span className="ml-auto text-xs text-eq-muted">
@@ -106,7 +115,7 @@ function InteractionCard({ ia }: { ia: Interaction }) {
                   Reward:
                 </span>
                 {r.item_id && (
-                  <ResolvedEntityLink type="item" id={r.item_id} />
+                  <ResolvedEntityLink type="item" id={r.item_id} className="text-xs border border-eq-gold/50 text-eq-gold px-2 py-0.5 rounded" />
                 )}
                 {r.exp > 0 && (
                   <span className="text-eq-muted text-xs">{r.exp.toLocaleString()} XP</span>

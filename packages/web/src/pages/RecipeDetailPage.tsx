@@ -56,7 +56,7 @@ export default function RecipeDetailPage() {
 
       <RelatedList<RecipeEntry>
         title="Ingredients"
-        items={data.ingredients}
+        items={data.ingredients.filter((e) => e.componentcount > 0)}
         renderItem={(e) => (
           <li key={e.item_id} className="text-sm flex gap-3">
             <EntityLink type="item" id={e.item_id} name={e.item_name} />

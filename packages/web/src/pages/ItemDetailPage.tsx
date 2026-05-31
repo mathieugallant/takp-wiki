@@ -23,6 +23,30 @@ const SLOT_NAMES: Record<number, string> = {
   18: 'Legs', 19: 'Feet', 20: 'Waist', 21: 'Ammo',
 };
 
+const CLASS_BITS: [number, string][] = [
+  [1, 'Warrior'], [2, 'Cleric'], [4, 'Paladin'], [8, 'Ranger'],
+  [16, 'Shadow Knight'], [32, 'Druid'], [64, 'Monk'], [128, 'Bard'],
+  [256, 'Rogue'], [512, 'Shaman'], [1024, 'Necromancer'], [2048, 'Wizard'],
+  [4096, 'Magician'], [8192, 'Enchanter'], [16384, 'Beastlord'],
+];
+
+const RACE_BITS: [number, string][] = [
+  [1, 'Human'], [2, 'Barbarian'], [4, 'Erudite'], [8, 'Wood Elf'],
+  [16, 'High Elf'], [32, 'Dark Elf'], [64, 'Half Elf'], [128, 'Dwarf'],
+  [256, 'Troll'], [512, 'Ogre'], [1024, 'Halfling'], [2048, 'Gnome'],
+  [4096, 'Iksar'], [8192, 'Vah Shir'],
+];
+
+function classesFromBitmask(mask: number): string {
+  if (mask === 65535 || mask === 0) return 'All';
+  return CLASS_BITS.filter(([bit]) => mask & bit).map(([, n]) => n).join(', ') || '—';
+}
+
+function racesFromBitmask(mask: number): string {
+  if (mask === 65535 || mask === 0) return 'All';
+  return RACE_BITS.filter(([bit]) => mask & bit).map(([, n]) => n).join(', ') || '—';
+}
+
 function slotNames(slotbitmask: number): string {
   const names: string[] = [];
   Object.entries(SLOT_NAMES).forEach(([bit, name]) => {
@@ -52,8 +76,8 @@ export default function ItemDetailPage() {
         {item.lore ? <p className="text-eq-muted text-sm italic">{item.lore as string}</p> : null}
         <div className="flex gap-3 mt-1 text-xs">
           {(item.magic as number) ? <span className="bg-eq-accent/20 text-eq-accent px-2 py-0.5 rounded">MAGIC</span> : null}
-          {(item.nodrop as number) ? <span className="bg-eq-danger/20 text-eq-danger px-2 py-0.5 rounded">NO DROP</span> : null}
-          {(item.norent as number) ? <span className="bg-yellow-800/30 text-yellow-400 px-2 py-0.5 rounded">NO RENT</span> : null}
+          {!(item.nodrop as number) ? <span className="bg-eq-danger/20 text-eq-danger px-2 py-0.5 rounded">NO DROP</span> : null}
+          {!(item.norent as number) ? <span className="bg-yellow-800/30 text-yellow-400 px-2 py-0.5 rounded">NO RENT</span> : null}
         </div>
       </div>
 
@@ -63,6 +87,10 @@ export default function ItemDetailPage() {
         { label: 'AC', value: (item.ac as number) || null },
         { label: 'Damage', value: (item.damage as number) || null },
         { label: 'Delay', value: (item.delay as number) || null },
+        (item.damage as number) && (item.delay as number)
+          ? { label: 'Ratio', value: ((item.damage as number) / (item.delay as number)).toFixed(2) }
+          : null,
+        { label: 'Req. Level', value: (item.reqlevel as number) || null },
         { label: 'Weight', value: `${((item.weight as number) / 10).toFixed(1)} st` },
         { label: 'HP', value: (item.hp as number) || null },
         { label: 'Mana', value: (item.mana as number) || null },
@@ -79,10 +107,15 @@ export default function ItemDetailPage() {
       ]} />
 
       {/* Spell Effects */}
-      {(data.spells.click || data.spells.worn || data.spells.proc || data.spells.focus) && (
+      {(data.spells.scroll || data.spells.click || data.spells.worn || data.spells.proc || data.spells.focus) && (
         <section className="space-y-2">
           <h2 className="text-eq-gold font-semibold text-sm uppercase tracking-wide">Spell Effects</h2>
           <ul className="space-y-1 text-sm">
+            {data.spells.scroll && (
+              <li><span className="text-eq-muted mr-2">Teaches:</span>
+                <EntityLink type="spell" id={data.spells.scroll.id} name={data.spells.scroll.name} />
+              </li>
+            )}
             {data.spells.click && (
               <li><span className="text-eq-muted mr-2">Click:</span>
                 <EntityLink type="spell" id={data.spells.click.id} name={data.spells.click.name} />
@@ -106,6 +139,34 @@ export default function ItemDetailPage() {
           </ul>
         </section>
       )}
+
+      {/* Classes & Races */}
+      {(() => {
+        const classMask = item.classes as number;
+        const raceMask = item.races as number;
+        const classesStr = classMask ? classesFromBitmask(classMask) : null;
+        const racesStr = raceMask ? racesFromBitmask(raceMask) : null;
+        if (!classesStr && !racesStr) return null;
+        return (
+          <section className="space-y-2">
+            <h2 className="text-eq-gold font-semibold text-sm uppercase tracking-wide">Usable By</h2>
+            <div className="space-y-1 text-sm">
+              {classesStr && (
+                <div>
+                  <span className="text-eq-muted mr-2">Classes:</span>
+                  <span className="text-eq-text">{classesStr}</span>
+                </div>
+              )}
+              {racesStr && (
+                <div>
+                  <span className="text-eq-muted mr-2">Races:</span>
+                  <span className="text-eq-text">{racesStr}</span>
+                </div>
+              )}
+            </div>
+          </section>
+        );
+      })()}
 
       <RelatedList<MerchantSource>
         title="Sold by"

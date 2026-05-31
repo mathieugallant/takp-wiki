@@ -17,6 +17,21 @@ const RESIST_TYPES: Record<number, string> = {
   0: 'None', 1: 'Magic', 2: 'Fire', 3: 'Cold', 4: 'Poison', 5: 'Disease',
 };
 
+const SPELL_CLASS_NAMES = [
+  'Warrior', 'Cleric', 'Paladin', 'Ranger', 'Shadow Knight', 'Druid',
+  'Monk', 'Bard', 'Rogue', 'Shaman', 'Necromancer', 'Wizard', 'Magician',
+  'Enchanter', 'Beastlord',
+];
+
+function spellClassesStr(spell: Record<string, unknown>): string | null {
+  const entries: string[] = [];
+  SPELL_CLASS_NAMES.forEach((name, i) => {
+    const level = spell[`classes${i + 1}`] as number;
+    if (level != null && level < 255) entries.push(`${name} (${level})`);
+  });
+  return entries.length ? entries.join(', ') : null;
+}
+
 export default function SpellDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { data, isLoading, error } = useQuery({
@@ -42,12 +57,16 @@ export default function SpellDetailPage() {
         { label: 'Cast Time', value: `${((s.cast_time as number) / 1000).toFixed(1)}s` },
         { label: 'Recovery', value: s.recovery_time ? `${((s.recovery_time as number) / 1000).toFixed(1)}s` : null },
         { label: 'Recast', value: s.recast_time ? `${((s.recast_time as number) / 1000).toFixed(1)}s` : null },
-        { label: 'Duration', value: s.buffdurationformula ? `${s.buffduration}t (formula ${s.buffdurationformula})` : null },
+        { label: 'Duration', value: data.duration_label },
         { label: 'Range', value: s.range as number > 0 ? `${s.range} units` : null },
         { label: 'AE Range', value: s.aoerange as number > 0 ? `${s.aoerange} units` : null },
         { label: 'Target', value: TARGET_TYPES[s.targettype as number] ?? `Type ${s.targettype}` },
         { label: 'Resist', value: RESIST_TYPES[s.resisttype as number] ?? `Type ${s.resisttype}` },
         { label: 'Resist Diff', value: s.resist_difficulty as number || null },
+        { label: 'Effect', value: data.good_effect_label },
+        { label: 'Environment', value: data.env_label },
+        { label: 'Time of Day', value: data.time_label },
+        { label: 'Classes', value: spellClassesStr(s as Record<string, unknown>) },
       ]} />
 
       {data.effects.length > 0 && (

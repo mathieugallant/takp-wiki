@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { SearchBar } from './SearchBar.js';
 
 interface LayoutProps {
@@ -6,6 +6,7 @@ interface LayoutProps {
 }
 
 const NAV_LINKS = [
+  { to: '/search', label: 'All' },
   { to: '/zones', label: 'Zones' },
   { to: '/npcs', label: 'NPCs' },
   { to: '/items', label: 'Items' },
@@ -17,6 +18,9 @@ const NAV_LINKS = [
 
 export default function Layout({ children }: LayoutProps) {
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const q = searchParams.get('q');
+
   return (
     <div className="min-h-screen flex flex-col">
       <header className="bg-eq-panel border-b border-eq-border sticky top-0 z-10">
@@ -31,7 +35,7 @@ export default function Layout({ children }: LayoutProps) {
             {NAV_LINKS.map(({ to, label }) => (
               <Link
                 key={to}
-                to={to}
+                to={q ? `${to}?q=${encodeURIComponent(q)}` : to}
                 className={`hover:text-eq-gold transition-colors ${
                   location.pathname.startsWith(to) ? 'text-eq-gold' : 'text-eq-muted'
                 }`}

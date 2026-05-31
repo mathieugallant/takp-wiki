@@ -16,7 +16,7 @@ const TRADESKILL_NAMES: Record<number, string> = {
 };
 
 export async function recipeRoutes(app: FastifyInstance) {
-  app.get<{ Querystring: { search?: string; skill?: string; page?: string } }>(
+  app.get<{ Querystring: { search?: string; skill?: string; sort?: string; dir?: string; page?: string } }>(
     '/api/recipes',
     async (req) => {
       const search = req.query.search?.trim() ?? '';
@@ -37,11 +37,18 @@ export async function recipeRoutes(app: FastifyInstance) {
         params.push(skill);
       }
 
+      const RECIPE_SORT: Record<string, string> = {
+        id: 'r.id', name: 'r.name', tradeskill: 'r.tradeskill',
+        trivial: 'r.trivial', skillneeded: 'r.skillneeded',
+      };
+      const sortCol = RECIPE_SORT[req.query.sort ?? ''] ?? 'r.name';
+      const sortDir = req.query.dir === 'desc' ? 'DESC' : 'ASC';
+
       return query(
         `SELECT r.id, r.name, r.tradeskill, r.trivial, r.skillneeded
          FROM tradeskill_recipe r
          WHERE ${conditions.join(' AND ')}
-         ORDER BY r.name LIMIT ? OFFSET ?`,
+         ORDER BY ${sortCol} ${sortDir} LIMIT ? OFFSET ?`,
         [...params, limit, offset]
       );
     }

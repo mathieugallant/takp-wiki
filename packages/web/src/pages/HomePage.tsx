@@ -20,7 +20,7 @@ export default function HomePage() {
           Browse game data — NPCs, items, zones, spells, quests and more.
         </p>
         <div className="max-w-lg mx-auto pt-2">
-          <SearchBar autoFocus placeholder="Search anything…" />
+          <SearchBar />
         </div>
       </div>
 

@@ -132,7 +132,7 @@ export default function NpcDetailPage() {
         title="Quests"
         items={data.quests}
         renderItem={(q) => (
-          <li key={q.file_path} className="text-sm">
+          <li key={q.file_path} className="text-sm flex gap-3">
             <EntityLink
               type="quest"
               id={q.file_path}

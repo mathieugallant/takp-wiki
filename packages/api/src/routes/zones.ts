@@ -4,7 +4,7 @@ import { getQuestsForZone } from '../quests.js';
 
 export async function zoneRoutes(app: FastifyInstance) {
   // List zones
-  app.get<{ Querystring: { search?: string; page?: string } }>(
+  app.get<{ Querystring: { search?: string; sort?: string; dir?: string; page?: string } }>(
     '/api/zones',
     async (req) => {
       const search = req.query.search?.trim() ?? '';
@@ -12,22 +12,28 @@ export async function zoneRoutes(app: FastifyInstance) {
       const limit = 50;
       const offset = (page - 1) * limit;
 
+      const ZONE_SORT: Record<string, string> = {
+        id: 'zoneidnumber', name: 'long_name', short_name: 'short_name',
+        expansion: 'expansion', min_level: 'min_level',
+      };
+      const sortCol = ZONE_SORT[req.query.sort ?? ''] ?? 'long_name';
+      const sortDir = req.query.dir === 'desc' ? 'DESC' : 'ASC';
+
+      const conditions: string[] = [];
+      const params: (string | number)[] = [];
       if (search) {
-        return query(
-          `SELECT id, short_name, long_name, expansion, min_level, hotzone
-           FROM zone
-           WHERE long_name LIKE ? OR short_name LIKE ?
-           ORDER BY long_name
-           LIMIT ? OFFSET ?`,
-          [`%${search}%`, `%${search}%`, limit, offset]
-        );
+        conditions.push('(long_name LIKE ? OR short_name LIKE ?)');
+        params.push(`%${search}%`, `%${search}%`);
       }
+      const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
       return query(
-        `SELECT id, short_name, long_name, expansion, min_level, hotzone
+        `SELECT zoneidnumber AS id, short_name, long_name, expansion, min_level, hotzone
          FROM zone
-         ORDER BY long_name
+         ${where}
+         ORDER BY ${sortCol} ${sortDir}
          LIMIT ? OFFSET ?`,
-        [limit, offset]
+        [...params, limit, offset]
       );
     }
   );

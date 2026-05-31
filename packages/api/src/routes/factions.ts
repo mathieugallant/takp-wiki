@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { query, queryOne } from '../db.js';
 
 export async function factionRoutes(app: FastifyInstance) {
-  app.get<{ Querystring: { search?: string; page?: string } }>(
+  app.get<{ Querystring: { search?: string; sort?: string; dir?: string; page?: string } }>(
     '/api/factions',
     async (req) => {
       const search = req.query.search?.trim() ?? '';
@@ -10,18 +10,26 @@ export async function factionRoutes(app: FastifyInstance) {
       const limit = 50;
       const offset = (page - 1) * limit;
 
+      const FACTION_SORT: Record<string, string> = {
+        id: 'id', name: 'name', base: 'base', min_cap: 'min_cap', max_cap: 'max_cap',
+      };
+      const sortCol = FACTION_SORT[req.query.sort ?? ''] ?? 'name';
+      const sortDir = req.query.dir === 'desc' ? 'DESC' : 'ASC';
+
+      const conditions: string[] = [];
+      const params: (string | number)[] = [];
       if (search) {
-        return query(
-          `SELECT id, name, base, min_cap, max_cap
-           FROM faction_list WHERE name LIKE ?
-           ORDER BY name LIMIT ? OFFSET ?`,
-          [`%${search}%`, limit, offset]
-        );
+        conditions.push('name LIKE ?');
+        params.push(`%${search}%`);
       }
+      const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
       return query(
         `SELECT id, name, base, min_cap, max_cap FROM faction_list
-         ORDER BY name LIMIT ? OFFSET ?`,
-        [limit, offset]
+         ${where}
+         ORDER BY ${sortCol} ${sortDir}
+         LIMIT ? OFFSET ?`,
+        [...params, limit, offset]
       );
     }
   );

@@ -4,30 +4,74 @@ import { getQuestsForItem } from '../quests.js';
 
 export async function itemRoutes(app: FastifyInstance) {
   // List / search items
-  app.get<{ Querystring: { search?: string; page?: string } }>(
+  app.get<{ Querystring: { search?: string; class?: string; race?: string; type?: string; level?: string; effect?: string; sort?: string; dir?: string; page?: string } }>(
     '/api/items',
     async (req) => {
       const search = req.query.search?.trim() ?? '';
+      const classId = req.query.class ? parseInt(req.query.class, 10) : null;
+      const raceId = req.query.race ? parseInt(req.query.race, 10) : null;
+      const itemType = req.query.type !== undefined && req.query.type !== '' ? parseInt(req.query.type, 10) : null;
+      const maxLevel = req.query.level ? parseInt(req.query.level, 10) : null;
+      const effectId = req.query.effect ? parseInt(req.query.effect, 10) : null;
       const page = Math.max(1, parseInt(req.query.page ?? '1', 10));
       const limit = 50;
       const offset = (page - 1) * limit;
 
+      const conditions: string[] = [];
+      const params: (string | number)[] = [];
+
       if (search) {
-        return query(
-          `SELECT id, Name AS name, icon, itemtype, ac, damage, delay, weight, magic, nodrop, norent
-           FROM items
-           WHERE Name LIKE ? OR lore LIKE ?
-           ORDER BY Name
-           LIMIT ? OFFSET ?`,
-          [`%${search}%`, `%${search}%`, limit, offset]
-        );
+        conditions.push('(Name LIKE ? OR lore LIKE ?)');
+        params.push(`%${search}%`, `%${search}%`);
       }
+      if (classId !== null && !isNaN(classId) && classId >= 1 && classId <= 15) {
+        conditions.push('(classes & ?) != 0');
+        params.push(1 << (classId - 1));
+      }
+      if (raceId !== null && !isNaN(raceId) && raceId >= 1 && raceId <= 14) {
+        conditions.push('(races & ?) != 0');
+        params.push(1 << (raceId - 1));
+      }
+      if (itemType !== null && !isNaN(itemType)) {
+        conditions.push('itemtype = ?');
+        params.push(itemType);
+      }
+      if (maxLevel !== null && !isNaN(maxLevel) && maxLevel > 0) {
+        conditions.push('(reqlevel = 0 OR reqlevel <= ?)');
+        params.push(maxLevel);
+      }
+      if (effectId !== null && !isNaN(effectId)) {
+        // Match items whose click/worn/proc/focus/scroll spell has this effect
+        conditions.push(
+          `EXISTS (
+            SELECT 1 FROM spells_new s
+            WHERE s.id IN (clickeffect, worneffect, proceffect, focuseffect, scrolleffect)
+              AND s.id > 0
+              AND (s.effectid1 = ? OR s.effectid2 = ? OR s.effectid3 = ?
+                OR s.effectid4 = ? OR s.effectid5 = ? OR s.effectid6 = ?
+                OR s.effectid7 = ? OR s.effectid8 = ? OR s.effectid9 = ?
+                OR s.effectid10 = ? OR s.effectid11 = ? OR s.effectid12 = ?)
+          )`
+        );
+        for (let i = 0; i < 12; i++) params.push(effectId);
+      }
+
+      const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
+      const ITEM_SORT: Record<string, string> = {
+        id: 'id', name: 'Name', itemtype: 'itemtype', ac: 'ac',
+        damage: 'CASE WHEN delay > 0 THEN damage / delay ELSE 0 END',
+      };
+      const sortCol = ITEM_SORT[req.query.sort ?? ''] ?? 'Name';
+      const sortDir = req.query.dir === 'desc' ? 'DESC' : 'ASC';
+
       return query(
         `SELECT id, Name AS name, icon, itemtype, ac, damage, delay, weight, magic, nodrop, norent
          FROM items
-         ORDER BY Name
+         ${where}
+         ORDER BY ${sortCol} ${sortDir}
          LIMIT ? OFFSET ?`,
-        [limit, offset]
+        [...params, limit, offset]
       );
     }
   );
@@ -48,6 +92,7 @@ export async function itemRoutes(app: FastifyInstance) {
       wornSpell,
       procSpell,
       focusSpell,
+      scrollSpell,
       merchants,
       recipesProducing,
       recipesConsuming,
@@ -66,6 +111,9 @@ export async function itemRoutes(app: FastifyInstance) {
         : Promise.resolve(null),
       item.focuseffect && (item.focuseffect as number) > 0
         ? queryOne('SELECT id, name, mana, cast_time, `range` FROM spells_new WHERE id = ?', [item.focuseffect as number])
+        : Promise.resolve(null),
+      item.scrolleffect && (item.scrolleffect as number) > 0
+        ? queryOne('SELECT id, name, mana, cast_time, `range` FROM spells_new WHERE id = ?', [item.scrolleffect as number])
         : Promise.resolve(null),
       // Merchants who sell this item
       query(
@@ -120,6 +168,7 @@ export async function itemRoutes(app: FastifyInstance) {
         worn: wornSpell,
         proc: procSpell,
         focus: focusSpell,
+        scroll: scrollSpell,
       },
       merchants,
       recipes_producing: recipesProducing,

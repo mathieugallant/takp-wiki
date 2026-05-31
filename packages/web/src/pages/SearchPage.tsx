@@ -1,7 +1,6 @@
 import { useSearchParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api, formatNpcName } from '../api.js';
-import { SearchBar } from '../components/SearchBar.js';
 import { LoadingSpinner, ErrorMessage } from '../components/Feedback.js';
 
 const TYPE_LABELS: Record<string, string> = {
@@ -40,12 +39,10 @@ export default function SearchPage() {
 
   return (
     <div className="space-y-6">
-      <div className="max-w-lg">
-        <SearchBar initialValue={q} autoFocus />
-      </div>
+      <h1 className="text-2xl font-bold text-eq-gold">All Results</h1>
 
       {q.length < 2 && (
-        <p className="text-eq-muted text-sm">Enter at least 2 characters to search.</p>
+        <p className="text-eq-muted text-sm">Use the search bar above to search across all categories.</p>
       )}
 
       {isLoading && <LoadingSpinner />}
@@ -81,6 +78,16 @@ export default function SearchPage() {
                     </li>
                   ))}
                 </ul>
+                {results.length >= 20 && (
+                  <div className="text-right">
+                    <Link
+                      to={`${basePath}?q=${encodeURIComponent(q)}`}
+                      className="text-xs text-eq-accent hover:underline"
+                    >
+                      Find more {TYPE_LABELS[type] ?? type} matching &ldquo;{q}&rdquo; →
+                    </Link>
+                  </div>
+                )}
               </section>
             );
           })}

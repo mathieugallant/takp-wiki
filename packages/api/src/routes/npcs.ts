@@ -4,7 +4,7 @@ import { getQuestsForNpc } from '../quests.js';
 
 export async function npcRoutes(app: FastifyInstance) {
   // List / search NPCs
-  app.get<{ Querystring: { search?: string; zone?: string; page?: string } }>(
+  app.get<{ Querystring: { search?: string; zone?: string; sort?: string; dir?: string; page?: string } }>(
     '/api/npcs',
     async (req) => {
       const search = req.query.search?.trim() ?? '';
@@ -32,11 +32,17 @@ export async function npcRoutes(app: FastifyInstance) {
            JOIN spawn2 s2 ON s2.spawngroupid = sg.id`
         : '';
 
+      const NPC_SORT: Record<string, string> = {
+        id: 'n.id', name: 'n.name', class: 'n.class', level: 'n.level', hp: 'n.hp',
+      };
+      const sortCol = NPC_SORT[req.query.sort ?? ''] ?? 'n.name';
+      const sortDir = req.query.dir === 'desc' ? 'DESC' : 'ASC';
+
       return query(
         `SELECT DISTINCT n.id, n.name, n.lastname, n.level, n.class, n.race, n.hp
          FROM npc_types n ${joinZone}
          ${where}
-         ORDER BY n.name
+         ORDER BY ${sortCol} ${sortDir}
          LIMIT ? OFFSET ?`,
         [...params, limit, offset]
       );

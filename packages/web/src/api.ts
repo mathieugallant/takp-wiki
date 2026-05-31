@@ -33,29 +33,29 @@ export const api = {
       ...(types?.length ? { types: types.join(',') } : {}),
     }),
 
-  zones: (params?: { search?: string; page?: string }) => get<Zone[]>('/zones', params),
+  zones: (params?: { search?: string; sort?: string; dir?: string; page?: string }) => get<Zone[]>('/zones', params),
   zone: (id: string | number) => get<ZoneDetail>(`/zones/${id}`),
 
-  npcs: (params?: { search?: string; zone?: string; page?: string }) =>
+  npcs: (params?: { search?: string; zone?: string; sort?: string; dir?: string; page?: string }) =>
     get<NpcSummary[]>('/npcs', params),
   npc: (id: string | number) => get<NpcDetail>(`/npcs/${id}`),
 
-  items: (params?: { search?: string; page?: string }) => get<ItemSummary[]>('/items', params),
+  items: (params?: { search?: string; class?: string; race?: string; type?: string; level?: string; effect?: string; sort?: string; dir?: string; page?: string }) => get<ItemSummary[]>('/items', params),
   item: (id: string | number) => get<ItemDetail>(`/items/${id}`),
 
-  spells: (params?: { search?: string; page?: string }) =>
+  spells: (params?: { search?: string; class?: string; level?: string; effect?: string; sort?: string; dir?: string; page?: string }) =>
     get<SpellSummary[]>('/spells', params),
   spell: (id: string | number) => get<SpellDetail>(`/spells/${id}`),
 
-  factions: (params?: { search?: string; page?: string }) =>
+  factions: (params?: { search?: string; sort?: string; dir?: string; page?: string }) =>
     get<FactionSummary[]>('/factions', params),
   faction: (id: string | number) => get<FactionDetail>(`/factions/${id}`),
 
-  aas: (params?: { search?: string; class?: string; page?: string }) =>
+  aas: (params?: { search?: string; class?: string; level?: string; effect?: string; sort?: string; dir?: string; page?: string }) =>
     get<AaSummary[]>('/aas', params),
   aa: (id: string | number) => get<AaDetail>(`/aas/${id}`),
 
-  recipes: (params?: { search?: string; skill?: string; page?: string }) =>
+  recipes: (params?: { search?: string; skill?: string; sort?: string; dir?: string; page?: string }) =>
     get<RecipeSummary[]>('/recipes', params),
   recipe: (id: string | number) => get<RecipeDetail>(`/recipes/${id}`),
 
@@ -182,6 +182,7 @@ export interface ItemDetail {
     worn: SpellSummary | null;
     proc: SpellSummary | null;
     focus: SpellSummary | null;
+    scroll: SpellSummary | null;
   };
   merchants: MerchantSource[];
   recipes_producing: RecipeRef[];
@@ -226,6 +227,10 @@ export interface SpellSummary {
 export interface SpellDetail {
   spell: SpellSummary & Record<string, unknown>;
   effects: { label: string; base: number }[];
+  duration_label: string | null;
+  env_label: string | null;
+  time_label: string | null;
+  good_effect_label: string | null;
   reagents: ItemSummary[];
   npc_casters: NpcSummary[];
   items: (ItemSummary & { effect_type: string })[];
@@ -254,25 +259,55 @@ export interface AaSummary {
   category: number;
 }
 
+/** Full altadv_vars row + extra API fields */
+export interface AaVars extends AaSummary {
+  cost: number;
+  cost_inc: number;
+  max_level: number;
+  class_type: number;
+  level_inc: number;
+  spellid: number;
+  spell_type: number;
+  spell_refresh: number;
+  prereq_skill: number;
+  prereq_minpoints: number;
+  aa_expansion: number;
+  special_category: number;
+  account_time_required: number;
+  eqmacid: string;
+  [key: string]: unknown;
+}
+
 export interface AaDetail {
-  aa: AaSummary;
-  ranks: AaRank[];
-  effects: AaEffect[];
+  aa: AaVars;
+  actions: AaAction[];
+  /** Effects keyed by 1-indexed rank number */
+  effects_by_rank: Record<string, AaEffect[]>;
+  prereq_name: string | null;
   linked_spells: SpellSummary[];
 }
 
-export interface AaRank {
-  id: number;
-  rank_num: number;
-  cost: number;
-  max_level: number;
+/** Row from aa_actions; rank is 0-indexed */
+export interface AaAction {
+  rank: number;
+  reuse_time: number;
   spell_id: number;
+  target: number;
+  nonspell_action: number;
+  nonspell_mana: number;
+  nonspell_duration: number;
+  redux_aa: number;
+  redux_rate: number;
+  redux_aa2: number;
+  redux_rate2: number;
 }
 
+/** Row from aa_effects; aaid = skill_id + rank - 1 */
 export interface AaEffect {
-  rank_id: number;
+  aaid: number;
   slot: number;
-  effect_id: number;
+  effectid: number;
+  effect_name: string;
   base1: number;
   base2: number;
 }
@@ -325,6 +360,7 @@ export interface Interaction {
   event: string;
   trigger_keywords: string[];
   trigger_items: TriggerItem[];
+  items_required_gate: number[];
   faction_required: number | null;
   responses: string[];
   responses_fail: string[];

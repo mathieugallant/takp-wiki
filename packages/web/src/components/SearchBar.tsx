@@ -1,38 +1,50 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 
-interface SearchBarProps {
-  initialValue?: string;
-  autoFocus?: boolean;
-  placeholder?: string;
-}
+const LISTING_PATHS: Record<string, string> = {
+  '/zones': 'zones',
+  '/npcs': 'NPCs',
+  '/items': 'items',
+  '/spells': 'spells',
+  '/factions': 'factions',
+  '/aas': 'AAs',
+  '/recipes': 'recipes',
+};
 
-export function SearchBar({ initialValue = '', autoFocus, placeholder = 'Search NPCs, items, spells, zones…' }: SearchBarProps) {
-  const [value, setValue] = useState(initialValue);
+export function SearchBar() {
   const navigate = useNavigate();
-  const inputRef = useRef<HTMLInputElement>(null);
+  const { pathname } = useLocation();
+  const [searchParams] = useSearchParams();
+
+  const listingLabel = LISTING_PATHS[pathname] ?? null;
+  const currentQ = searchParams.get('q') ?? '';
+
+  const [value, setValue] = useState(currentQ);
 
   useEffect(() => {
-    setValue(initialValue);
-  }, [initialValue]);
+    setValue(currentQ);
+  }, [pathname, currentQ]);
+
+  const placeholder = listingLabel ? `Filter ${listingLabel}…` : 'Search anything…';
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const q = value.trim();
     if (q.length >= 2) {
-      navigate(`/search?q=${encodeURIComponent(q)}`);
+      const dest = listingLabel ? pathname : '/search';
+      navigate(`${dest}?q=${encodeURIComponent(q)}`);
+    } else if (listingLabel) {
+      navigate(pathname);
     }
   }
 
   return (
     <form onSubmit={handleSubmit} className="flex gap-2">
       <input
-        ref={inputRef}
         type="search"
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder={placeholder}
-        autoFocus={autoFocus}
         className="flex-1 bg-eq-panel border border-eq-border rounded px-3 py-2 text-eq-text placeholder:text-eq-muted focus:outline-none focus:border-eq-accent text-sm"
       />
       <button

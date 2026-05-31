@@ -38,16 +38,17 @@ export default function ZoneDetailPage() {
 
       <StatBlock rows={[
         { label: 'Min Level', value: z.min_level as number || '—' },
-        { label: 'Can Bind', value: z.can_bind ? 'Yes' : 'No' },
-        { label: 'Can Combat', value: z.can_combat ? 'Yes' : 'No' },
-        { label: 'Can Levitate', value: z.can_levitate ? 'Yes' : 'No' },
+        { label: 'Can Bind', value: z.canbind ? 'Yes' : 'No' },
+        { label: 'Can Combat', value: z.cancombat ? 'Yes' : 'No' },
+        { label: 'Can Levitate', value: z.canlevitate ? 'Yes' : 'No' },
         { label: 'Hot Zone', value: z.hotzone ? 'Yes' : 'No' },
         { label: 'Safe Coords', value: `${z.safe_x}, ${z.safe_y}, ${z.safe_z}` },
+        { label: 'Exp Rate', value: z.zone_exp_multiplier ? `${z.zone_exp_multiplier}x` : '1x' },
       ]} />
 
       <RelatedList<NpcSummary>
         title="NPCs"
-        items={data.npcs}
+        items={Array.from(new Map(data.npcs.map(n => [n.id, n])).values())}
         renderItem={(npc) => (
           <li key={npc.id} className="text-sm flex gap-3">
             <EntityLink type="npc" id={npc.id} name={formatNpcName(npc.name)} />
