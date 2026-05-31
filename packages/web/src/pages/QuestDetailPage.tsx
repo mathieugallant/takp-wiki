@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '../api.js';
 import type { Interaction, FactionChange, QuestReward, TriggerItem } from '../api.js';
 import { EntityLink } from '../components/EntityLink.js';
+import { ResolvedEntityLink } from '../components/ResolvedEntityLink.js';
 import { LoadingSpinner, ErrorMessage } from '../components/Feedback.js';
 
 // ── Coin formatter ─────────────────────────────────────────────────────────────
@@ -41,7 +42,7 @@ function InteractionCard({ ia }: { ia: Interaction }) {
 
         {ia.trigger_items.map((t: TriggerItem) => (
           <span key={t.item_id} className="inline-flex items-center gap-1">
-            <EntityLink type="item" id={t.item_id} name={`Item #${t.item_id}`} className="text-xs border border-eq-border text-eq-text px-2 py-0.5 rounded" />
+            <ResolvedEntityLink type="item" id={t.item_id} className="text-xs border border-eq-border text-eq-text px-2 py-0.5 rounded" />
             {t.count > 1 && (
               <span className="text-xs text-eq-muted">&times;{t.count}</span>
             )}
@@ -88,7 +89,7 @@ function InteractionCard({ ia }: { ia: Interaction }) {
                 <span className="inline-flex flex-wrap gap-x-3 gap-y-1">
                   {ia.faction_changes.map((fc: FactionChange, i) => (
                     <span key={i} className="text-xs">
-                      <EntityLink type="faction" id={fc.faction_id} name={`#${fc.faction_id}`} />
+                      <ResolvedEntityLink type="faction" id={fc.faction_id} />
                       <span className={fc.delta >= 0 ? 'text-eq-success ml-1' : 'text-eq-danger ml-1'}>
                         {fc.delta >= 0 ? `+${fc.delta}` : fc.delta}
                       </span>
@@ -105,7 +106,7 @@ function InteractionCard({ ia }: { ia: Interaction }) {
                   Reward:
                 </span>
                 {r.item_id && (
-                  <EntityLink type="item" id={r.item_id} name={`Item #${r.item_id}`} />
+                  <ResolvedEntityLink type="item" id={r.item_id} />
                 )}
                 {r.exp > 0 && (
                   <span className="text-eq-muted text-xs">{r.exp.toLocaleString()} XP</span>
@@ -123,7 +124,7 @@ function InteractionCard({ ia }: { ia: Interaction }) {
                   Item given:
                 </span>
                 {ia.items_given.map((id) => (
-                  <EntityLink key={id} type="item" id={id} name={`Item #${id}`} />
+                  <ResolvedEntityLink key={id} type="item" id={id} />
                 ))}
               </div>
             )}
@@ -135,7 +136,7 @@ function InteractionCard({ ia }: { ia: Interaction }) {
                   Spawns:
                 </span>
                 {ia.npcs_spawned.map((id) => (
-                  <EntityLink key={id} type="npc" id={id} name={`NPC #${id}`} />
+                  <ResolvedEntityLink key={id} type="npc" id={id} />
                 ))}
               </div>
             )}
@@ -147,7 +148,7 @@ function InteractionCard({ ia }: { ia: Interaction }) {
                   Casts:
                 </span>
                 {ia.spells_cast.map((id) => (
-                  <EntityLink key={id} type="spell" id={id} name={`Spell #${id}`} />
+                  <ResolvedEntityLink key={id} type="spell" id={id} />
                 ))}
               </div>
             )}
@@ -276,7 +277,7 @@ export default function QuestDetailPage() {
           <h2 className="text-eq-gold font-semibold text-sm uppercase tracking-wide">NPCs Spawned</h2>
           <div className="flex flex-wrap gap-2">
             {extraNpcs.map((id) => (
-              <EntityLink key={id} type="npc" id={id} name={`NPC #${id}`} />
+              <ResolvedEntityLink key={id} type="npc" id={id} />
             ))}
           </div>
         </section>
@@ -286,7 +287,7 @@ export default function QuestDetailPage() {
           <h2 className="text-eq-gold font-semibold text-sm uppercase tracking-wide">Spells Cast</h2>
           <div className="flex flex-wrap gap-2">
             {extraSpells.map((id) => (
-              <EntityLink key={id} type="spell" id={id} name={`Spell #${id}`} />
+              <ResolvedEntityLink key={id} type="spell" id={id} />
             ))}
           </div>
         </section>
