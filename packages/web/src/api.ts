@@ -348,6 +348,7 @@ export interface QuestReward {
   gold: number;
   platinum: number;
   item_id: number | null;
+  item_choices: number[] | null;
   exp: number;
 }
 

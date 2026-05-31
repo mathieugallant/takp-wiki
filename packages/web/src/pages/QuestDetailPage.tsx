@@ -115,13 +115,21 @@ function InteractionCard({ ia }: { ia: Interaction }) {
                   Reward:
                 </span>
                 {r.item_id && (
-                  <ResolvedEntityLink type="item" id={r.item_id} className="text-xs border border-eq-gold/50 text-eq-gold px-2 py-0.5 rounded" />
+                  <ResolvedEntityLink type="item" id={r.item_id} className="text-xs border border-eq-gold/60 bg-eq-gold/10 text-eq-gold px-2 py-0.5 rounded" />
+                )}
+                {r.item_choices && r.item_choices.length > 0 && (
+                  <span className="inline-flex flex-wrap items-center gap-1">
+                    <span className="text-xs text-eq-muted italic">one of:</span>
+                    {r.item_choices.map((id) => (
+                      <ResolvedEntityLink key={id} type="item" id={id} className="text-xs border border-eq-gold/60 bg-eq-gold/10 text-eq-gold px-2 py-0.5 rounded" />
+                    ))}
+                  </span>
                 )}
                 {r.exp > 0 && (
-                  <span className="text-eq-muted text-xs">{r.exp.toLocaleString()} XP</span>
+                  <span className="text-xs bg-eq-success/10 text-eq-success px-2 py-0.5 rounded">{r.exp.toLocaleString()} XP</span>
                 )}
                 {formatCoins(r) && (
-                  <span className="text-eq-muted text-xs">{formatCoins(r)}</span>
+                  <span className="text-xs bg-amber-500/10 text-amber-300 px-2 py-0.5 rounded">{formatCoins(r)}</span>
                 )}
               </div>
             ))}
@@ -133,7 +141,7 @@ function InteractionCard({ ia }: { ia: Interaction }) {
                   Item given:
                 </span>
                 {ia.items_given.map((id) => (
-                  <ResolvedEntityLink key={id} type="item" id={id} />
+                  <ResolvedEntityLink key={id} type="item" id={id} className="text-xs border border-eq-gold/60 bg-eq-gold/10 text-eq-gold px-2 py-0.5 rounded" />
                 ))}
               </div>
             )}

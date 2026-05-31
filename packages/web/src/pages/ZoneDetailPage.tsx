@@ -4,8 +4,9 @@ import { api, formatNpcName } from '../api.js';
 import { StatBlock } from '../components/StatBlock.js';
 import { RelatedList } from '../components/RelatedList.js';
 import { EntityLink } from '../components/EntityLink.js';
+import { ResolvedEntityLink } from '../components/ResolvedEntityLink.js';
 import { LoadingSpinner, ErrorMessage } from '../components/Feedback.js';
-import type { NpcSummary, LootEntry, MerchantItem, SpellEntry, QuestData } from '../api.js';
+import type { NpcSummary, LootEntry, MerchantItem, SpellEntry, QuestData, QuestReward } from '../api.js';
 
 const CLASS_NAMES = ['', 'Warrior', 'Cleric', 'Paladin', 'Ranger', 'Shadow Knight', 'Druid',
   'Monk', 'Bard', 'Rogue', 'Shaman', 'Necromancer', 'Wizard', 'Magician', 'Enchanter', 'Beastlord'];
@@ -13,6 +14,31 @@ const CLASS_NAMES = ['', 'Warrior', 'Cleric', 'Paladin', 'Ranger', 'Shadow Knigh
 const EXPANSION_NAMES: Record<number, string> = {
   0: 'Classic', 1: 'Kunark', 2: 'Velious', 3: 'Luclin', 4: 'Planes of Power',
 };
+
+function questRewards(q: QuestData): { itemIds: number[]; exp: number; coins: string } {
+  let exp = 0;
+  let platinum = 0, gold = 0, silver = 0, copper = 0;
+  for (const ia of q.interactions) {
+    for (const r of ia.rewards) {
+      exp      += r.exp ?? 0;
+      platinum += r.platinum ?? 0;
+      gold     += r.gold ?? 0;
+      silver   += r.silver ?? 0;
+      copper   += r.copper ?? 0;
+    }
+  }
+  const coinParts = [
+    platinum && `${platinum}pp`,
+    gold     && `${gold}gp`,
+    silver   && `${silver}sp`,
+    copper   && `${copper}cp`,
+  ].filter(Boolean);
+  return {
+    itemIds: q.items_rewarded,
+    exp,
+    coins: coinParts.join(' '),
+  };
+}
 
 export default function ZoneDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -72,19 +98,30 @@ export default function ZoneDetailPage() {
       <RelatedList<QuestData>
         title="Quests"
         items={data.quests}
-        renderItem={(q) => (
-          <li key={q.file_path} className="text-sm">
-            <EntityLink
-              type="quest"
-              id={q.file_path}
-              name={formatNpcName(q.npc_name)}
-              questPath={`${q.zone}/${q.npc_name}`}
-            />
-            {q.keywords.length > 0 && (
-              <span className="ml-2 text-eq-muted text-xs">[{q.keywords.slice(0, 3).join(', ')}]</span>
-            )}
-          </li>
-        )}
+        renderItem={(q) => {
+          const { itemIds, exp, coins } = questRewards(q);
+          return (
+            <li key={q.file_path} className="text-sm">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <EntityLink
+                  type="quest"
+                  id={q.file_path}
+                  name={formatNpcName(q.npc_name)}
+                  questPath={`${q.zone}/${q.npc_name}`}
+                />
+                {itemIds.map((id) => (
+                  <ResolvedEntityLink key={id} type="item" id={id} className="text-[11px] border border-eq-gold/40 bg-eq-gold/10 text-eq-gold/80 px-1 py-0 rounded" />
+                ))}
+                {exp > 0 && (
+                  <span className="text-[11px] text-eq-success/80">{exp.toLocaleString()} XP</span>
+                )}
+                {coins && (
+                  <span className="text-[11px] text-amber-300/80">{coins}</span>
+                )}
+              </div>
+            </li>
+          );
+        }}
       />
     </div>
   );
