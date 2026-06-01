@@ -214,6 +214,15 @@ export default function QuestDetailPage() {
             <span className="ml-2 text-xs bg-eq-gold/20 text-eq-gold px-1 rounded">Encounter</span>
           )}
         </p>
+        {data.npc_spawn && data.npc_spawn.length > 0 && (
+          <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
+            {data.npc_spawn.map((s, i) => (
+              <span key={i} className="text-xs text-eq-muted font-mono">
+                ({Math.round(s.x)}, {Math.round(s.y)}, {Math.round(s.z)})
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* No interactions parsed — fall back to flat view */}

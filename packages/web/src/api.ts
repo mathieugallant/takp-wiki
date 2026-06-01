@@ -387,4 +387,6 @@ export interface QuestData {
   factions_modified: number[];
   interactions: Interaction[];
   match_coverage: number;
+  /** Populated only on the single-quest detail endpoint, not on list endpoints. */
+  npc_spawn?: Array<{ npc_id: number; x: number; y: number; z: number }>;
 }
