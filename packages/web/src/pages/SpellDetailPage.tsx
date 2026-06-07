@@ -74,18 +74,28 @@ export default function SpellDetailPage() {
           <h2 className="text-eq-gold font-semibold text-sm uppercase tracking-wide">Effects</h2>
           <ul className="space-y-0.5 text-sm">
             {data.effects.map((e, i) => (
-              <li key={i} className="text-eq-text">{e.label}</li>
+              <li key={i} className="text-eq-text">
+                {e.item_id && e.item_name ? (
+                  <>
+                    {e.label.split(':')[0]}:{' '}
+                    <EntityLink type="item" id={e.item_id} name={e.item_name} />
+                  </>
+                ) : (
+                  e.label
+                )}
+              </li>
             ))}
           </ul>
         </section>
       )}
 
-      <RelatedList<ItemSummary>
+      <RelatedList<{ id: number; count: number; name: string; icon: string }>
         title="Reagents"
         items={data.reagents}
         renderItem={(item) => (
-          <li key={item.id} className="text-sm">
+          <li key={item.id} className="text-sm flex gap-3">
             <EntityLink type="item" id={item.id} name={item.name} />
+            <span className="text-eq-muted text-xs capitalize">{item.count}x</span>
           </li>
         )}
       />

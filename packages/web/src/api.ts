@@ -197,6 +197,7 @@ export interface MerchantSource {
   slot: number;
   quantity: number;
   faction_required: number;
+  zone?: string;
 }
 
 export interface RecipeRef {
@@ -214,6 +215,7 @@ export interface LootSource {
   drop_chance: number;
   table_chance: number;
   final_pct: number;
+  zone?: string;
 }
 
 export interface SpellSummary {
@@ -222,16 +224,17 @@ export interface SpellSummary {
   mana: number;
   casttime?: number;
   range?: number;
+  min_level?: number;
 }
 
 export interface SpellDetail {
   spell: SpellSummary & Record<string, unknown>;
-  effects: { label: string; base: number }[];
+  effects: { label: string; base: number; effectid: number; item_id?: number; item_name?: string }[];
   duration_label: string | null;
   env_label: string | null;
   time_label: string | null;
   good_effect_label: string | null;
-  reagents: ItemSummary[];
+  reagents: { id: number; count: number; name: string; icon: string }[];
   npc_casters: NpcSummary[];
   items: (ItemSummary & { effect_type: string })[];
 }

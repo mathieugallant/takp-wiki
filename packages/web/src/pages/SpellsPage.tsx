@@ -1,3 +1,4 @@
+import React from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../api.js';
@@ -32,6 +33,13 @@ export default function SpellsPage() {
   const sortCol = searchParams.get('sort') ?? 'name';
   const sortDir = (searchParams.get('dir') ?? 'asc') as 'asc' | 'desc';
 
+  // When class filter is active, keep level as primary ordering.
+  // If user explicitly sorts by level, honor that direction for group ordering.
+  const effectiveSortCol = classFilter ? 'level' : sortCol;
+  const effectiveSortDir = classFilter
+    ? (sortCol === 'level' ? sortDir : 'asc')
+    : sortDir;
+
   function handleSort(col: string) {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
@@ -46,10 +54,56 @@ export default function SpellsPage() {
   }
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['spells', q, classFilter, levelFilter, effectFilter, sortCol, sortDir],
-    queryFn: () => api.spells({ search: q, class: classFilter, level: levelFilter, effect: effectFilter, sort: sortCol, dir: sortDir }),
+    queryKey: ['spells', q, classFilter, levelFilter, effectFilter, effectiveSortCol, effectiveSortDir],
+    queryFn: () => api.spells({ search: q, class: classFilter, level: levelFilter, effect: effectFilter, sort: effectiveSortCol, dir: effectiveSortDir }),
     enabled: isEnabled,
   });
+
+  // Group spells by level when class filter is active
+  const spellGroups = data && classFilter ? (() => {
+    const withLevel: Map<number, typeof data> = new Map();
+    const noLevel: typeof data = [];
+
+    data.forEach(spell => {
+      const level = spell.min_level != null && spell.min_level < 255 ? spell.min_level : null;
+      if (level === null) {
+        noLevel.push(spell);
+      } else {
+        if (!withLevel.has(level)) {
+          withLevel.set(level, []);
+        }
+        withLevel.get(level)!.push(spell);
+      }
+    });
+
+    // Sort each group by user's selected sort column
+    const sortFn = (a: typeof data[0], b: typeof data[0]) => {
+      let aVal: any = a[sortCol as keyof typeof a];
+      let bVal: any = b[sortCol as keyof typeof b];
+      
+      if (aVal == null) aVal = '';
+      if (bVal == null) bVal = '';
+      
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return sortDir === 'asc' ? aVal - bVal : bVal - aVal;
+      }
+      
+      const aStr = String(aVal);
+      const bStr = String(bVal);
+      return sortDir === 'asc' ? aStr.localeCompare(bStr) : bStr.localeCompare(aStr);
+    };
+
+    withLevel.forEach(spells => spells.sort(sortFn));
+    noLevel.sort(sortFn);
+
+    const grouped = Array.from(withLevel.entries()).sort((a, b) => {
+      return sortCol === 'level' && sortDir === 'desc'
+        ? b[0] - a[0]
+        : a[0] - b[0];
+    });
+
+    return { withLevel: grouped, noLevel };
+  })() : null;
 
   return (
     <div className="space-y-4">
@@ -101,27 +155,88 @@ export default function SpellsPage() {
               <tr className="border-b border-eq-border text-eq-muted text-left">
                 <SortHeader col="id" label="ID" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
                 <SortHeader col="name" label="Name" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
+                <SortHeader col="level" label="Level" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
                 <SortHeader col="mana" label="Mana" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
                 <SortHeader col="casttime" label="Cast Time" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
                 <SortHeader col="range" label="Range" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
               </tr>
             </thead>
             <tbody className="divide-y divide-eq-border/50">
-              {data.map((spell) => (
-                <tr key={spell.id} className="hover:bg-eq-panel/40">
-                  <td className="py-1.5 pr-4 text-eq-muted">{spell.id}</td>
-                  <td className="py-1.5 pr-4">
-                    <Link to={`/spells/${spell.id}`}>{spell.name}</Link>
-                  </td>
-                  <td className="py-1.5 pr-4 text-eq-muted">{spell.mana || '—'}</td>
-                  <td className="py-1.5 pr-4 text-eq-muted">
-                    {spell.casttime != null ? `${(spell.casttime / 1000).toFixed(1)}s` : '—'}
-                  </td>
-                  <td className="py-1.5 pr-4 text-eq-muted">
-                    {spell.range != null ? `${spell.range}` : '—'}
-                  </td>
-                </tr>
-              ))}
+              {spellGroups ? (
+                <>
+                  {spellGroups.withLevel.map(([level, spells]) => (
+                    <React.Fragment key={`level-${level}`}>
+                      <tr className="bg-eq-gold/10">
+                        <td colSpan={6} className="py-1 px-2 text-eq-gold font-semibold text-xs uppercase tracking-wide">
+                          Level {level}
+                        </td>
+                      </tr>
+                      {spells.map((spell) => (
+                        <tr key={spell.id} className="hover:bg-eq-panel/40">
+                          <td className="py-1.5 pr-4 text-eq-muted">{spell.id}</td>
+                          <td className="py-1.5 pr-4">
+                            <Link to={`/spells/${spell.id}`}>{spell.name}</Link>
+                          </td>
+                          <td className="py-1.5 pr-4 text-eq-muted">
+                            {spell.min_level != null && spell.min_level < 255 ? spell.min_level : '—'}
+                          </td>
+                          <td className="py-1.5 pr-4 text-eq-muted">{spell.mana || '—'}</td>
+                          <td className="py-1.5 pr-4 text-eq-muted">
+                            {spell.casttime != null ? `${(spell.casttime / 1000).toFixed(1)}s` : '—'}
+                          </td>
+                          <td className="py-1.5 pr-4 text-eq-muted">
+                            {spell.range != null ? `${spell.range}` : '—'}
+                          </td>
+                        </tr>
+                      ))}
+                    </React.Fragment>
+                  ))}
+                  {spellGroups.noLevel.length > 0 && (
+                    <React.Fragment key="no-level">
+                      <tr className="bg-eq-muted/10">
+                        <td colSpan={6} className="py-1 px-2 text-eq-muted font-semibold text-xs uppercase tracking-wide">
+                          No Level Requirement
+                        </td>
+                      </tr>
+                      {spellGroups.noLevel.map((spell) => (
+                        <tr key={spell.id} className="hover:bg-eq-panel/40">
+                          <td className="py-1.5 pr-4 text-eq-muted">{spell.id}</td>
+                          <td className="py-1.5 pr-4">
+                            <Link to={`/spells/${spell.id}`}>{spell.name}</Link>
+                          </td>
+                          <td className="py-1.5 pr-4 text-eq-muted">—</td>
+                          <td className="py-1.5 pr-4 text-eq-muted">{spell.mana || '—'}</td>
+                          <td className="py-1.5 pr-4 text-eq-muted">
+                            {spell.casttime != null ? `${(spell.casttime / 1000).toFixed(1)}s` : '—'}
+                          </td>
+                          <td className="py-1.5 pr-4 text-eq-muted">
+                            {spell.range != null ? `${spell.range}` : '—'}
+                          </td>
+                        </tr>
+                      ))}
+                    </React.Fragment>
+                  )}
+                </>
+              ) : (
+                data.map((spell) => (
+                  <tr key={spell.id} className="hover:bg-eq-panel/40">
+                    <td className="py-1.5 pr-4 text-eq-muted">{spell.id}</td>
+                    <td className="py-1.5 pr-4">
+                      <Link to={`/spells/${spell.id}`}>{spell.name}</Link>
+                    </td>
+                    <td className="py-1.5 pr-4 text-eq-muted">
+                      {spell.min_level != null && spell.min_level < 255 ? spell.min_level : '—'}
+                    </td>
+                    <td className="py-1.5 pr-4 text-eq-muted">{spell.mana || '—'}</td>
+                    <td className="py-1.5 pr-4 text-eq-muted">
+                      {spell.casttime != null ? `${(spell.casttime / 1000).toFixed(1)}s` : '—'}
+                    </td>
+                    <td className="py-1.5 pr-4 text-eq-muted">
+                      {spell.range != null ? `${spell.range}` : '—'}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
           {data.length === 0 && (

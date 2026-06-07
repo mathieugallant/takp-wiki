@@ -366,11 +366,20 @@ export async function spellRoutes(app: FastifyInstance) {
       const SPELL_SORT: Record<string, string> = {
         id: 'id', name: 'name', mana: 'mana', casttime: 'cast_time', range: '`range`',
       };
+      // Level sort: use the selected class column when available, else LEAST across all classes
+      const classCols = Array.from({ length: 15 }, (_, i) => `classes${i + 1}`).join(',');
+      const levelSortExpr = (classId !== null && !isNaN(classId) && classId >= 1 && classId <= 15)
+        ? `classes${classId}`
+        : `LEAST(${classCols})`;
+      if (req.query.sort === 'level') {
+        SPELL_SORT['level'] = levelSortExpr;
+      }
       const sortCol = SPELL_SORT[req.query.sort ?? ''] ?? 'name';
       const sortDir = req.query.dir === 'desc' ? 'DESC' : 'ASC';
 
       return query(
-        `SELECT id, name, mana, cast_time, \`range\`, targettype, resisttype
+        `SELECT id, name, mana, cast_time, \`range\`, targettype, resisttype,
+                ${levelSortExpr} AS min_level
          FROM spells_new
          ${where}
          ORDER BY ${sortCol} ${sortDir}
@@ -392,16 +401,41 @@ export async function spellRoutes(app: FastifyInstance) {
     if (!spell) return reply.status(404).send({ error: 'Spell not found' });
 
     // Build human-readable effect list from effect1-12 / effectbasevalue1-12
-    const effects: { label: string; base: number }[] = [];
+    const effects: { label: string; base: number; effectid: number; item_id?: number; item_name?: string }[] = [];
+    const summonItemEffects: number[] = [32, 109]; // Summon Item, Summon Item Into Bag
+    const summonItemIds: number[] = [];
+    
     for (let i = 1; i <= 12; i++) {
       const effectid = spell[`effectid${i}`] as number;
       const base     = spell[`effect_base_value${i}`] as number;
       const max      = (spell[`max${i}`] as number) ?? 0;
       const formula  = (spell[`formula${i}`] as number) ?? 0;
       if (effectid != null && effectid !== 254) {
-        effects.push({ label: describeEffect(effectid, base, max, formula), base });
+        effects.push({ label: describeEffect(effectid, base, max, formula), base, effectid });
+        // Collect item IDs for summon item effects
+        if (summonItemEffects.includes(effectid) && base > 0) {
+          summonItemIds.push(base);
+        }
       }
     }
+
+    // Look up item names for summon effects
+    const summonedItems = summonItemIds.length > 0
+      ? await query<{ id: number; name: string }>(
+          `SELECT id, Name AS name FROM items WHERE id IN (${summonItemIds.map(() => '?').join(',')})`,
+          summonItemIds
+        )
+      : [];
+    
+    const itemMap = new Map(summonedItems.map(item => [item.id, item.name]));
+    
+    // Merge item names into effects
+    effects.forEach(effect => {
+      if (summonItemEffects.includes(effect.effectid) && effect.base > 0) {
+        effect.item_id = effect.base;
+        effect.item_name = itemMap.get(effect.base);
+      }
+    });
 
     const duration_label = describeDuration(
       spell.buffdurationformula as number,
@@ -412,15 +446,16 @@ export async function spellRoutes(app: FastifyInstance) {
     const good_effect_label = GOOD_EFFECT[spell.goodEffect as number] ?? null;
 
     // Reagent components (component1-4 field in spells_new)
-    const reagentIds = [1, 2, 3, 4]
-      .map((n) => spell[`component${n}`] as number)
-      .filter((id) => id && id > 0);
+    const reagents = [1, 2, 3, 4]
+      .map((n) => { return {id: spell[`components${n}`] as number, count: spell[`component_counts${n}`] as number, name: '', icon: ''} })
+      .filter((reagent) => reagent.id && reagent.id > 0 && reagent.count && reagent.count > 0);
 
-    const [reagents, npcCasters, itemsWithSpell] = await Promise.all([
-      reagentIds.length > 0
-        ? query(
-            `SELECT id, Name AS name, icon FROM items WHERE id IN (${reagentIds.map(() => '?').join(',')})`,
-            reagentIds
+    const [reagentItems, npcCasters, itemsWithSpell] = await Promise.all([
+      reagents.length > 0
+        ? query<{ id: number; name: string; icon: string }>(
+            `SELECT id, Name AS name, icon FROM items
+            WHERE id IN (${reagents.map(() => '?').join(',')})`,
+            reagents.map((r) => r.id)
           )
         : Promise.resolve([]),
       // NPCs that have this spell in their spell sets
@@ -449,6 +484,14 @@ export async function spellRoutes(app: FastifyInstance) {
         [id, id, id, id, id, id, id, id, id, id]
       ),
     ]);
+
+    reagents.forEach((reagent) => {
+      const item = reagentItems.find((i) => i.id === reagent.id);
+      if (item) {
+        reagent.name = item.name;
+        reagent.icon = item.icon;
+      }
+    });
 
     return { spell, effects, duration_label, env_label, time_label, good_effect_label, reagents, npc_casters: npcCasters, items: itemsWithSpell };
   });

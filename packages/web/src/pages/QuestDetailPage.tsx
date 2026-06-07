@@ -16,6 +16,35 @@ function formatCoins(r: QuestReward): string {
   ].filter(Boolean).join(' ');
 }
 
+// ── Format dialog with bracketed actions highlighted ──────────────────────────
+function formatDialog(text: string): React.ReactNode {
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  const bracketRegex = /\[([^\]]+)\]/g;
+  let match: RegExpExecArray | null;
+
+  while ((match = bracketRegex.exec(text)) !== null) {
+    // Add text before the bracket
+    if (match.index > lastIndex) {
+      parts.push(text.substring(lastIndex, match.index));
+    }
+    // Add the bracketed text with distinct styling
+    parts.push(
+      <span key={match.index} className="text-cyan-400">
+        [{match[1]}]
+      </span>
+    );
+    lastIndex = match.index + match[0].length;
+  }
+
+  // Add remaining text after last bracket
+  if (lastIndex < text.length) {
+    parts.push(text.substring(lastIndex));
+  }
+
+  return parts.length > 0 ? parts : text;
+}
+
 // ── Interaction card ───────────────────────────────────────────────────────────
 function InteractionCard({ ia }: { ia: Interaction }) {
   const eventLabel = ia.event.replace('event_', '');
@@ -69,7 +98,7 @@ function InteractionCard({ ia }: { ia: Interaction }) {
         {/* ── NPC response (success / unconditional) ── */}
         {ia.responses.map((r, i) => (
           <p key={i} className="text-sm text-eq-text italic border-l-2 border-eq-gold pl-3">
-            &ldquo;{r}&rdquo;
+            &ldquo;{formatDialog(r)}&rdquo;
           </p>
         ))}
 
@@ -79,7 +108,7 @@ function InteractionCard({ ia }: { ia: Interaction }) {
             <p className="text-xs text-eq-muted">If faction insufficient:</p>
             {ia.responses_fail.map((r, i) => (
               <p key={i} className="text-sm text-eq-muted italic border-l-2 border-eq-danger pl-3">
-                &ldquo;{r}&rdquo;
+                &ldquo;{formatDialog(r)}&rdquo;
               </p>
             ))}
           </div>
@@ -246,7 +275,7 @@ export default function QuestDetailPage() {
               <ul className="space-y-2">
                 {data.dialogs.map((line, i) => (
                   <li key={i} className="text-sm text-eq-muted italic border-l-2 border-eq-border pl-3">
-                    &ldquo;{line}&rdquo;
+                    &ldquo;{formatDialog(line)}&rdquo;
                   </li>
                 ))}
               </ul>

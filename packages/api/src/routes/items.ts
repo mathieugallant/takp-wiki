@@ -117,7 +117,11 @@ export async function itemRoutes(app: FastifyInstance) {
         : Promise.resolve(null),
       // Merchants who sell this item
       query(
-        `SELECT n.id AS npc_id, n.name AS npc_name, ml.slot, ml.quantity, ml.faction_required
+        `SELECT n.id AS npc_id, n.name AS npc_name, ml.slot, ml.quantity, ml.faction_required,
+                (SELECT s2.zone FROM spawnentry se
+                 JOIN spawngroup sg ON sg.id = se.spawngroupid
+                 JOIN spawn2 s2 ON s2.spawngroupid = sg.id
+                 WHERE se.npcid = n.id LIMIT 1) AS zone
          FROM merchantlist ml
          JOIN npc_types n ON n.merchant_id = ml.merchantid
          WHERE ml.item = ?
@@ -146,7 +150,11 @@ export async function itemRoutes(app: FastifyInstance) {
       query(
         `SELECT n.id AS npc_id, n.name AS npc_name,
                 lde.chance AS drop_chance, lte.probability AS table_probability,
-                ROUND(lte.probability * lde.chance / 100, 4) AS final_pct
+                ROUND(lte.probability * lde.chance / 100, 4) AS final_pct,
+                (SELECT s2.zone FROM spawnentry se
+                 JOIN spawngroup sg ON sg.id = se.spawngroupid
+                 JOIN spawn2 s2 ON s2.spawngroupid = sg.id
+                 WHERE se.npcid = n.id LIMIT 1) AS zone
          FROM lootdrop_entries lde
          JOIN lootdrop ld ON ld.id = lde.lootdrop_id
          JOIN loottable_entries lte ON lte.lootdrop_id = ld.id

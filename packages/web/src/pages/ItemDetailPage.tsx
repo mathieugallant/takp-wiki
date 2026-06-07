@@ -174,6 +174,7 @@ export default function ItemDetailPage() {
         renderItem={(m) => (
           <li key={m.npc_id} className="text-sm flex gap-3">
             <EntityLink type="npc" id={m.npc_id} name={formatNpcName(m.npc_name)} />
+            {m.zone && <span className="text-eq-muted text-xs">{m.zone}</span>}
             {m.faction_required > 0 && <span className="text-eq-muted text-xs">faction {m.faction_required}</span>}
           </li>
         )}
@@ -207,6 +208,7 @@ export default function ItemDetailPage() {
         renderItem={(src) => (
           <li key={src.npc_id} className="text-sm flex gap-3">
             <EntityLink type="npc" id={src.npc_id} name={formatNpcName(src.npc_name)} />
+            {src.zone && <span className="text-eq-muted text-xs">{src.zone}</span>}
             <span className="text-eq-muted text-xs">{src.final_pct}%</span>
           </li>
         )}

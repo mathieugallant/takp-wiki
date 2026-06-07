@@ -116,7 +116,7 @@ export default function ZoneDetailPage() {
 
       <RelatedList
         title="Zone Connections"
-        items={data.zone_points}
+        items={Array.from(new Map(data.zone_points.map(zp => [zp.target_zone_id, zp])).values())}
         renderItem={(zp) => (
           <li key={zp.id} className="text-sm">
             <EntityLink type="zone" id={zp.target_zone_id} name={zp.dest_long || zp.dest_short || String(zp.target_zone_id)} />
