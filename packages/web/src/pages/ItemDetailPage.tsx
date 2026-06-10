@@ -7,21 +7,93 @@ import { EntityLink } from '../components/EntityLink.js';
 import { LoadingSpinner, ErrorMessage } from '../components/Feedback.js';
 import type { MerchantSource, RecipeRef, LootSource, QuestData } from '../api.js';
 
-const ITEM_TYPES: Record<number, string> = {
-  0: 'Melee 1H', 1: 'Melee 2H Slashing', 2: 'Piercing', 3: 'Melee 1H Blunt',
-  4: 'Melee 2H Blunt', 5: 'Archery', 7: 'Throwing', 8: 'Shield', 10: 'Armor',
-  11: 'Gems', 12: 'Lockpick', 14: 'Food', 15: 'Drink', 16: 'Light',
-  17: 'Combinable', 18: 'Bandage', 19: 'Thrown', 20: 'Spell Scroll',
-  23: 'Key', 24: 'Compass', 26: 'Fishing Pole', 27: 'Fishing Bait',
-  29: 'Container', 31: 'Note', 35: 'Augmentation',
+export const ITEM_TYPES: Record<number, string> = {
+  0: "1HS",
+  1: "2HS",
+  2: "Piercing",
+  3: "1HB",
+  4: "2HB",
+  5: "Archery",
+  6: "Unused",
+  7: "Throwing",
+  8: "Shield",
+  9: "Unused",
+  10: "Defense",
+  11: "Involves Tradeskills",
+  12: "Lock Picking",
+  13: "Unused",
+  14: "Food",
+  15: "Drink",
+  16: "Light Source",
+  17: "Common Inventory Item",
+  18: "Bind Wound",
+  19: "Thrown Casting Items",
+  20: "Spells / Song Sheets",
+  21: "Potions",
+  22: "Fletched Arrows",
+  23: "Wind Instruments",
+  24: "Stringed Instruments",
+  25: "Brass Instruments",
+  26: "Drum Instruments",
+  27: "Ammo",
+  28: "Unused",
+  29: "Jewlery Items",
+  30: "Unused",
+  31: "Readable Notes",
+  32: "Readable Books",
+  33: "Keys",
+  34: "Odd Items",
+  35: "2H Pierce",
+  36: "Fishing Poles",
+  37: "Fishing Bait",
+  38: "Alcoholic Beverages",
+  39: "More Keys",
+  40: "Compasses",
+  41: "Unused",
+  42: "Poisons",
+  43: "Unused",
+  44: "Unused",
+  45: "Hand to Hand",
+  46: "Unused",
+  47: "Unused",
+  48: "Unused",
+  49: "Unused",
+  50: "Unused",
+  51: "Unused",
+  52: "Charms",
+  53: "Dyes",
+  54: "Augments",
+  55: "Augment Solvents",
+  56: "Augment Distillers",
+  58: "Fellowship Banner Materials",
+  60: "Cultural Armor Manuals",
+  63: "New Currencies like Orum",
 };
 
-const SLOT_NAMES: Record<number, string> = {
-  1: 'Ear', 2: 'Head', 3: 'Face', 4: 'Ear', 5: 'Neck', 6: 'Shoulders',
-  7: 'Arms', 8: 'Back', 9: 'Wrist', 10: 'Wrist', 11: 'Range', 12: 'Hands',
-  13: 'Primary', 14: 'Secondary', 15: 'Ring', 16: 'Ring', 17: 'Chest',
-  18: 'Legs', 19: 'Feet', 20: 'Waist', 21: 'Ammo',
-};
+export const SLOT_BITS: [number, string][] = [
+  [1, 'Cursor'],
+  [2, 'Ear01'],
+  [4, 'Head'],
+  [8, 'Face'],
+  [16, 'Ear02'],
+  [32, 'Neck'],
+  [64, 'Shoulders'],
+  [128, 'Arms'],
+  [256, 'Back'],
+  [512, 'Bracer01'],
+  [1024, 'Bracer02'],
+  [2048, 'Range'],
+  [4096, 'Hands'],
+  [8192, 'Primary'],
+  [16384, 'Secondary'],
+  [32768, 'Ring01'],
+  [65536, 'Ring02'],
+  [131072, 'Chest'],
+  [262144, 'Legs'],
+  [524288, 'Feet'],
+  [1048576, 'Waist'],
+  [2097152, 'Ammo'],
+];
 
 const CLASS_BITS: [number, string][] = [
   [1, 'Warrior'], [2, 'Cleric'], [4, 'Paladin'], [8, 'Ranger'],
@@ -48,11 +120,7 @@ function racesFromBitmask(mask: number): string {
 }
 
 function slotNames(slotbitmask: number): string {
-  const names: string[] = [];
-  Object.entries(SLOT_NAMES).forEach(([bit, name]) => {
-    if (slotbitmask & (1 << (parseInt(bit) - 1))) names.push(name);
-  });
-  return names.join(', ') || '—';
+  return SLOT_BITS.filter(([bit]) => slotbitmask & bit).map(([, n]) => n).join(', ') || '—';
 }
 
 export default function ItemDetailPage() {

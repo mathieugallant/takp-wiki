@@ -4,6 +4,7 @@ import { api } from '../api.js';
 import { LoadingSpinner, ErrorMessage } from '../components/Feedback.js';
 import { EffectSelect } from '../components/EffectSelect.js';
 import { SortHeader } from '../components/SortHeader.js';
+import { ITEM_TYPES, SLOT_BITS } from './ItemDetailPage.js';
 
 const CLASS_OPTIONS: [number, string][] = [
   [1, 'Warrior'], [2, 'Cleric'], [3, 'Paladin'], [4, 'Ranger'],
@@ -18,13 +19,6 @@ const RACE_OPTIONS: [number, string][] = [
   [9, 'Troll'], [10, 'Ogre'], [11, 'Halfling'], [12, 'Gnome'],
   [13, 'Iksar'], [14, 'Vah Shir'],
 ];
-
-const ITEM_TYPES: Record<number, string> = {
-  0: '1H Slash', 1: '2H Slash', 2: 'Piercing', 3: '1H Blunt', 4: '2H Blunt',
-  5: 'Archery', 7: 'Throwing', 8: 'Shield', 10: 'Armor', 11: 'Misc',
-  14: 'Food', 15: 'Drink', 16: 'Light', 17: 'Combinable', 20: 'Scroll',
-  29: 'Container', 31: 'Note',
-};
 
 export default function ItemsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -164,6 +158,7 @@ export default function ItemsPage() {
                 <SortHeader col="ac" label="AC" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
                 <SortHeader col="damage" label="Dmg / Dly" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
                 <th className="py-2 pr-4 text-eq-muted">Flags</th>
+                <th className="py-2 pr-4 text-eq-muted">Slots</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-eq-border/50">
@@ -184,6 +179,13 @@ export default function ItemsPage() {
                   <td className="py-1.5 pr-4 text-xs space-x-1">
                     {!item.nodrop ? <span className="text-eq-danger">ND</span> : null}
                     {!item.norent ? <span className="text-yellow-400">NR</span> : null}
+                  </td>
+                  <td className="py-1.5 pr-4 text-eq-muted">
+                    {SLOT_BITS.filter(([bit]) => item.slots && (item.slots & bit)).map(([, name]) => (
+                      <span key={name} className="inline-block border border-eq-muted/50 rounded px-1">
+                        {name}
+                      </span>
+                    ))}
                   </td>
                 </tr>
               ))}

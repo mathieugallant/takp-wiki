@@ -66,7 +66,7 @@ export async function itemRoutes(app: FastifyInstance) {
       const sortDir = req.query.dir === 'desc' ? 'DESC' : 'ASC';
 
       return query(
-        `SELECT id, Name AS name, icon, itemtype, ac, damage, delay, weight, magic, nodrop, norent
+        `SELECT id, Name AS name, icon, itemtype, ac, damage, delay, weight, magic, nodrop, norent, slots
          FROM items
          ${where}
          ORDER BY ${sortCol} ${sortDir}

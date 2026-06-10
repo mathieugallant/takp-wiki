@@ -328,7 +328,7 @@ export async function spellRoutes(app: FastifyInstance) {
       const maxLevel = req.query.level ? parseInt(req.query.level, 10) : null;
       const effectId = req.query.effect ? parseInt(req.query.effect, 10) : null;
       const page = Math.max(1, parseInt(req.query.page ?? '1', 10));
-      const limit = 50;
+      let limit = 50;
       const offset = (page - 1) * limit;
 
       const conditions: string[] = [];
@@ -340,6 +340,7 @@ export async function spellRoutes(app: FastifyInstance) {
       }
       // spells_new has per-class columns classes1–classes15; value 255 = not available
       if (classId !== null && !isNaN(classId) && classId >= 1 && classId <= 15) {
+        limit = 0; 
         conditions.push(`classes${classId} < 255`);
         if (maxLevel !== null && !isNaN(maxLevel) && maxLevel > 0) {
           conditions.push(`classes${classId} <= ?`);
@@ -383,8 +384,8 @@ export async function spellRoutes(app: FastifyInstance) {
          FROM spells_new
          ${where}
          ORDER BY ${sortCol} ${sortDir}
-         LIMIT ? OFFSET ?`,
-        [...params, limit, offset]
+         ${limit > 0 ? 'LIMIT ? OFFSET ?' : ''}`,
+        [...params, ...(limit > 0 ? [limit, offset] : [])]
       );
     }
   );

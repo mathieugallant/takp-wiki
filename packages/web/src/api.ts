@@ -173,6 +173,7 @@ export interface ItemSummary {
   magic: number;
   nodrop: number;
   norent: number;
+  slots: number;
 }
 
 export interface ItemDetail {
