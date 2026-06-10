@@ -59,7 +59,7 @@ export default function ZoneDetailPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-eq-gold">{z.long_name as string}</h1>
-        <p className="text-eq-muted text-sm">{z.short_name as string} &middot; {expName}</p>
+        <p className="text-eq-muted text-sm">{z.zoneidnumber as number} &middot; {z.short_name as string} &middot; {expName}</p>
       </div>
 
       <StatBlock rows={[
@@ -73,7 +73,7 @@ export default function ZoneDetailPage() {
       ]} />
 
       <RelatedList<QuestData>
-        title="Quests"
+        title="Quests and Events"
         items={data.quests}
         renderItem={(q) => {
           const { itemIds, exp, coins } = questRewards(q);
@@ -116,7 +116,7 @@ export default function ZoneDetailPage() {
 
       <RelatedList
         title="Zone Connections"
-        items={Array.from(new Map(data.zone_points.map(zp => [zp.target_zone_id, zp])).values())}
+        items={(Array.from(new Map(data.zone_points.map(zp => [zp.target_zone_id, zp])).values())).filter(zone => zone.target_zone_id !== z.zoneidnumber)}
         renderItem={(zp) => (
           <li key={zp.id} className="text-sm">
             <EntityLink type="zone" id={zp.target_zone_id} name={zp.dest_long || zp.dest_short || String(zp.target_zone_id)} />

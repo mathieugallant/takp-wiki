@@ -73,7 +73,7 @@ export default function NpcDetailPage() {
         items={data.spawn_locations}
         renderItem={(loc) => (
           <li key={loc.spawn2_id} className="text-sm flex gap-3">
-            <EntityLink type="zone" id={loc.spawn2_id} name={loc.long_name || loc.zone} />
+            <EntityLink type="zone" id={loc.zone} name={loc.long_name || loc.zone} />
             <span className="text-eq-muted text-xs">{loc.x.toFixed(1)}, {loc.y.toFixed(1)}, {loc.z.toFixed(1)}</span>
           </li>
         )}
