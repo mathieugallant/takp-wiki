@@ -40,7 +40,7 @@ export const api = {
     get<NpcSummary[]>('/npcs', params),
   npc: (id: string | number) => get<NpcDetail>(`/npcs/${id}`),
 
-  items: (params?: { search?: string; class?: string; race?: string; type?: string; level?: string; effect?: string; sort?: string; dir?: string; page?: string }) => get<ItemSummary[]>('/items', params),
+  items: (params?: { search?: string; class?: string; race?: string; slot?: string; type?: string; level?: string; effect?: string; sort?: string; dir?: string; page?: string }) => get<ItemSummary[]>('/items', params),
   item: (id: string | number) => get<ItemDetail>(`/items/${id}`),
 
   spells: (params?: { search?: string; class?: string; level?: string; effect?: string; sort?: string; dir?: string; page?: string }) =>

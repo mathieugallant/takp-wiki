@@ -25,11 +25,12 @@ export default function ItemsPage() {
   const q = searchParams.get('q') ?? '';
   const classFilter = searchParams.get('class') ?? '';
   const raceFilter = searchParams.get('race') ?? '';
+  const slotFilter = searchParams.get('slot') ?? '';
   const typeFilter = searchParams.get('type') ?? '';
   const levelFilter = searchParams.get('level') ?? '';
   const effectFilter = searchParams.get('effect') ?? '';
 
-  const hasFilters = classFilter !== '' || raceFilter !== '' || typeFilter !== '' || levelFilter !== '' || effectFilter !== '';
+  const hasFilters = classFilter !== '' || raceFilter !== '' || slotFilter !== '' || typeFilter !== '' || levelFilter !== '' || effectFilter !== '';
   const isEnabled = q.length >= 2 || hasFilters;
 
   function setFilter(key: string, value: string) {
@@ -43,7 +44,7 @@ export default function ItemsPage() {
   function clearFilters() {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
-      ['class', 'race', 'type', 'level', 'effect'].forEach((k) => next.delete(k));
+      ['class', 'race', 'slot', 'type', 'level', 'effect'].forEach((k) => next.delete(k));
       return next;
     });
   }
@@ -65,8 +66,8 @@ export default function ItemsPage() {
   }
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['items', q, classFilter, raceFilter, typeFilter, levelFilter, effectFilter, sortCol, sortDir],
-    queryFn: () => api.items({ search: q, class: classFilter, race: raceFilter, type: typeFilter, level: levelFilter, effect: effectFilter, sort: sortCol, dir: sortDir }),
+    queryKey: ['items', q, classFilter, raceFilter, slotFilter, typeFilter, levelFilter, effectFilter, sortCol, sortDir],
+    queryFn: () => api.items({ search: q, class: classFilter, race: raceFilter, slot: slotFilter, type: typeFilter, level: levelFilter, effect: effectFilter, sort: sortCol, dir: sortDir }),
     enabled: isEnabled,
   });
 
@@ -98,6 +99,19 @@ export default function ItemsPage() {
             <option value="">All</option>
             {RACE_OPTIONS.map(([id, name]) => (
               <option key={id} value={String(id)}>{name}</option>
+            ))}
+          </select>
+        </label>
+        <label className="text-eq-muted flex items-center gap-1">
+          Slot:
+          <select
+            value={slotFilter}
+            onChange={(e) => setFilter('slot', e.target.value)}
+            className="bg-eq-dark border border-eq-border rounded px-2 py-0.5 text-eq-text"
+          >
+            <option value="">All</option>
+            {SLOT_BITS.map(([bit, name]) => (
+              <option key={bit} value={String(bit)}>{name}</option>
             ))}
           </select>
         </label>

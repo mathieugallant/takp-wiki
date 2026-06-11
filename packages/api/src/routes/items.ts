@@ -4,12 +4,13 @@ import { getQuestsForItem } from '../quests.js';
 
 export async function itemRoutes(app: FastifyInstance) {
   // List / search items
-  app.get<{ Querystring: { search?: string; class?: string; race?: string; type?: string; level?: string; effect?: string; sort?: string; dir?: string; page?: string } }>(
+  app.get<{ Querystring: { search?: string; class?: string; race?: string; slot?: string; type?: string; level?: string; effect?: string; sort?: string; dir?: string; page?: string } }>(
     '/api/items',
     async (req) => {
       const search = req.query.search?.trim() ?? '';
       const classId = req.query.class ? parseInt(req.query.class, 10) : null;
       const raceId = req.query.race ? parseInt(req.query.race, 10) : null;
+      const slotBit = req.query.slot ? parseInt(req.query.slot, 10) : null;
       const itemType = req.query.type !== undefined && req.query.type !== '' ? parseInt(req.query.type, 10) : null;
       const maxLevel = req.query.level ? parseInt(req.query.level, 10) : null;
       const effectId = req.query.effect ? parseInt(req.query.effect, 10) : null;
@@ -31,6 +32,10 @@ export async function itemRoutes(app: FastifyInstance) {
       if (raceId !== null && !isNaN(raceId) && raceId >= 1 && raceId <= 14) {
         conditions.push('(races & ?) != 0');
         params.push(1 << (raceId - 1));
+      }
+      if (slotBit !== null && !isNaN(slotBit) && slotBit > 0 && Number.isInteger(Math.log2(slotBit))) {
+        conditions.push('(slots & ?) != 0');
+        params.push(slotBit);
       }
       if (itemType !== null && !isNaN(itemType)) {
         conditions.push('itemtype = ?');
